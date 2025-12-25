@@ -1,0 +1,475 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Enhancements for Better UX */
+
+/* 1. Consistent Base Styling */
+@layer base {
+  /* Consistent font sizing and spacing */
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply text-base leading-relaxed;
+  }
+  
+  /* Global scrollbar styling for theme consistency */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209 213 219) rgb(243 244 246); /* gray-300 gray-100 */
+  }
+  
+  .dark * {
+    scrollbar-color: rgb(75 85 99) rgb(31 41 55); /* gray-600 gray-800 */
+  }
+  
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+  
+  /* Dark mode scrollbar styling */
+  .dark *::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+  
+  .dark *::-webkit-scrollbar-thumb {
+    @apply bg-gray-600;
+  }
+  
+  .dark *::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+  
+  /* Focus styles for accessibility */
+  *:focus {
+    @apply outline-none ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800;
+  }
+  
+  /* Consistent button focus styles */
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800;
+  }
+}
+
+/* 2. Enhanced Component Styles */
+@layer components {
+  /* Consistent card styling */
+  .ui-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+  }
+  
+  /* Enhanced table styling */
+  .ui-table {
+    @apply w-full border-collapse;
+  }
+  
+  .ui-table-header {
+    @apply bg-gray-50 dark:bg-gray-700 sticky top-0 z-10;
+  }
+  
+  .ui-table-header th {
+    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider
+           border-b border-gray-200 dark:border-gray-600;
+  }
+  
+  .ui-table-row {
+    @apply border-b border-gray-200 dark:border-gray-700 transition-colors duration-150;
+  }
+  
+  .ui-table-row:hover {
+    @apply bg-gray-50 dark:bg-gray-700/50;
+  }
+  
+  .ui-table-cell {
+    @apply px-4 py-3 text-sm text-gray-900 dark:text-gray-100;
+  }
+  
+  /* Enhanced sorting indicators */
+  .sort-header {
+    @apply cursor-pointer select-none transition-colors duration-150;
+  }
+  
+  .sort-header:hover {
+    @apply bg-gray-100 dark:bg-gray-600;
+  }
+  
+  .sort-icon {
+    @apply ml-1 w-4 h-4 transition-transform duration-200;
+  }
+  
+  .sort-icon-active {
+    @apply text-indigo-600 dark:text-indigo-400;
+  }
+  
+  .sort-icon-inactive {
+    @apply text-gray-300 dark:text-gray-500;
+  }
+  
+  .sort-header:hover .sort-icon-inactive {
+    @apply text-gray-400 dark:text-gray-400;
+  }
+  
+  /* Enhanced form controls */
+  .ui-input {
+    @apply block w-full rounded-md border-gray-300 dark:border-gray-600 
+           shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+           focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150;
+  }
+
+  /* Enhanced authentication form styles */
+  .auth-container {
+    @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 
+           dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4 sm:px-6 lg:px-8;
+  }
+
+  .auth-card {
+    @apply max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-large 
+           border border-gray-200 dark:border-gray-700 p-8 sm:p-10;
+  }
+
+  .auth-header {
+    @apply text-center mb-8;
+  }
+
+  .auth-logo {
+    @apply text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 
+           bg-clip-text text-transparent mb-2;
+  }
+
+  .auth-title {
+    @apply text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2;
+  }
+
+  .auth-subtitle {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .auth-link {
+    @apply font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 
+           dark:hover:text-indigo-300 transition-colors duration-200;
+  }
+
+  .auth-form {
+    @apply space-y-6;
+  }
+
+  .auth-input-group {
+    @apply space-y-1;
+  }
+
+  .auth-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+
+  .auth-input {
+    @apply block w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 
+           rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+           placeholder-gray-500 dark:placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+           transition-all duration-200 shadow-sm hover:shadow-md focus:shadow-glow;
+  }
+
+  .auth-input-error {
+    @apply border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20 
+           focus:ring-red-500 focus:border-transparent;
+  }
+
+  .auth-button {
+    @apply w-full flex justify-center items-center px-6 py-3 border border-transparent 
+           text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600
+           hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 
+           focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200
+           shadow-md hover:shadow-lg active:scale-95;
+  }
+
+  .auth-button-loading {
+    @apply relative;
+  }
+
+  .auth-error {
+    @apply rounded-xl bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 p-4;
+  }
+
+  .auth-success {
+    @apply rounded-xl bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800 p-4;
+  }
+
+  .auth-divider {
+    @apply relative my-6;
+  }
+
+  .auth-divider::before {
+    @apply absolute inset-0 flex items-center;
+    content: '';
+  }
+
+  .auth-divider::after {
+    @apply relative w-full border-t border-gray-300 dark:border-gray-600;
+    content: '';
+  }
+
+  .auth-divider-text {
+    @apply relative flex justify-center text-sm;
+  }
+
+  .auth-divider-text span {
+    @apply px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400;
+  }
+
+  /* Mobile-specific enhancements */
+  @media (max-width: 640px) {
+    .auth-container {
+      @apply px-4 py-8;
+    }
+    
+    .auth-card {
+      @apply p-6 shadow-medium;
+    }
+    
+    .auth-input {
+      @apply text-base py-4; /* Larger touch targets on mobile */
+    }
+    
+    .auth-button {
+      @apply py-4 text-base; /* Larger button for better touch interaction */
+    }
+    
+    .auth-title {
+      @apply text-2xl;
+    }
+  }
+
+  /* Enhanced focus states for better accessibility */
+  .auth-input:focus {
+    @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800;
+  }
+
+  /* Improved button states */
+  .auth-button:active {
+    @apply transform scale-95;
+  }
+
+  .auth-button:focus-visible {
+    @apply ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800;
+  }
+
+  /* Loading state improvements */
+  .auth-button-loading {
+    @apply cursor-wait;
+  }
+
+  /* Enhanced error states */
+  .auth-input-error:focus {
+    @apply ring-2 ring-red-500 ring-offset-2 dark:ring-offset-gray-800;
+  }
+
+  /* Success message styling */
+  .auth-success-message {
+    @apply rounded-xl bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800 p-4;
+  }
+
+  /* Form validation feedback */
+  .auth-validation-message {
+    @apply text-xs mt-1 transition-all duration-200;
+  }
+
+  .auth-validation-message.error {
+    @apply text-red-600 dark:text-red-400;
+  }
+
+  .auth-validation-message.info {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+  
+  .ui-select {
+    @apply block w-full rounded-md border-gray-300 dark:border-gray-600 
+           shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+           focus:border-indigo-500 focus:ring-indigo-500 transition-colors duration-150;
+  }
+  
+  /* Enhanced button styles */
+  .ui-button {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent 
+           text-sm font-medium rounded-md transition-all duration-150 focus:outline-none;
+  }
+  
+  .ui-button-primary {
+    @apply ui-button bg-indigo-600 text-white hover:bg-indigo-700 
+           focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  
+  .ui-button-secondary {
+    @apply ui-button bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 
+           border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700;
+  }
+  
+  .ui-button-success {
+    @apply ui-button bg-green-600 text-white hover:bg-green-700 
+           focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  
+  .ui-button-danger {
+    @apply ui-button bg-red-600 text-white hover:bg-red-700 
+           focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+  
+  /* Loading states */
+  .ui-loading {
+    @apply opacity-50 cursor-not-allowed;
+  }
+  
+  .ui-spinner {
+    @apply animate-spin rounded-full border-2 border-current border-t-transparent;
+  }
+  
+  /* Error states */
+  .ui-error {
+    @apply border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20 
+           text-red-900 dark:text-red-200;
+  }
+  
+  .ui-error-text {
+    @apply text-red-600 dark:text-red-400 text-sm;
+  }
+  
+  /* Success states */
+  .ui-success {
+    @apply border-green-300 dark:border-green-600 bg-green-50 dark:bg-green-900/20 
+           text-green-900 dark:text-green-200;
+  }
+  
+  /* Progress indicators */
+  .ui-progress-bar {
+    @apply w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden;
+  }
+  
+  .ui-progress-fill {
+    @apply h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300 ease-out;
+  }
+  
+  /* Accessibility improvements */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  }
+  
+  /* Animation classes */
+  .fade-in {
+    @apply animate-in fade-in duration-200;
+  }
+  
+  .slide-in {
+    @apply animate-in slide-in-from-bottom-4 duration-300;
+  }
+}
+
+/* 3. Responsive Design Enhancements */
+@layer utilities {
+  /* Enhanced responsive spacing */
+  .responsive-padding {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+  
+  .responsive-margin {
+    @apply m-4 sm:m-6 lg:m-8;
+  }
+  
+  /* Responsive text sizing */
+  .responsive-title {
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold;
+  }
+  
+  .responsive-subtitle {
+    @apply text-base sm:text-lg lg:text-xl font-medium;
+  }
+  
+  /* Enhanced mobile-first table responsiveness */
+  .table-responsive {
+    @apply overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300;
+  }
+  
+  /* Custom scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-gray-300::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded;
+  }
+  
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded;
+  }
+  
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+  
+  /* Dark mode scrollbar styling */
+  .dark .scrollbar-thumb-gray-300::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+  
+  .dark .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    @apply bg-gray-600;
+  }
+  
+  .dark .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+  
+  /* Enhanced hover states */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:transform hover:-translate-y-0.5 hover:shadow-md;
+  }
+  
+  /* Enhanced focus indicators */
+  .focus-ring {
+    @apply focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+  }
+}
+
+/* 4. Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    @apply text-black bg-white;
+  }
+}
+
+/* 5. Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} 

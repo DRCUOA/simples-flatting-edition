@@ -1,0 +1,547 @@
+const { getConnection } = require('../db/index');
+const db = getConnection();
+
+const toISODate = (d) => {
+  if (!d) return null;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return null;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+exports.getMonthlySummary = (req, res) => {
+  const start = toISODate(req.query.start);
+  const end = toISODate(req.query.end);
+  const userId = req.user?.user_id;
+  
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  if (!start || !end) {
+    return res.status(400).json({ error: 'start and end are required (YYYY-MM-DD)' });
+  }
+  
+  const sql = `
+    WITH base AS (
+      SELECT 
+        DATE(transaction_date) AS d,
+        strftime('%Y-%m', transaction_date) AS ym,
+        signed_amount
+      FROM transactions t
+      LEFT JOIN Categories c ON t.category_id = c.category_id
+      WHERE t.user_id = ?
+        AND DATE(transaction_date) >= DATE(?) 
+        AND DATE(transaction_date) <= DATE(?)
+        AND (c.category_name IS NULL OR c.category_name != 'Internal-Transfers')
+    ),
+    monthly AS (
+      SELECT 
+        ym,
+        SUM(CASE WHEN signed_amount >= 0 THEN signed_amount ELSE 0 END) AS income,
+        SUM(CASE WHEN signed_amount < 0 THEN ABS(signed_amount) ELSE 0 END) AS expense,
+        SUM(signed_amount) AS net
+      FROM base
+      GROUP BY ym
+      ORDER BY ym
+    )
+    SELECT ym as month, COALESCE(income,0) as income, COALESCE(expense,0) as expense, COALESCE(net,0) as net
+    FROM monthly
+  `;
+  db.all(sql, [userId, start, end], (err, rows) => {
+    if (err) {
+      console.error('Error fetching monthly summary:', err);
+      return res.status(500).json({ error: 'Failed to compute monthly summary' });
+    }
+    res.json(rows || []);
+  });
+};
+
+// DEPRECATED: Legacy budget-vs-actual endpoint
+// This function now redirects to the new budget system endpoints
+exports.getBudgetVsActual = async (req, res) => {
+  const start = toISODate(req.query.start);
+  const end = toISODate(req.query.end);
+  const userId = req.user?.user_id;
+  
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  if (!start || !end) {
+    return res.status(400).json({ error: 'start and end are required (YYYY-MM-DD)' });
+  }
+  
+  // Use new budget system endpoint
+  try {
+    // Extract month from date range (use start date's month)
+    const month = start.substring(0, 7); // Format: YYYY-MM
+    
+    // Get the report from the new system
+    const report = await reportingService.getMonthReport(userId, month);
+    
+    // Transform to legacy format for backward compatibility
+    const legacyFormat = report.categories.map(cat => ({
+      budget_id: cat.category_id,
+      category_id: cat.category_id,
+      name: cat.category_name,
+      period_start: start,
+      period_end: end,
+      budgeted: cat.budgeted_cents / 100, // Convert cents to dollars
+      actual: Math.abs(cat.expense_cents) / 100, // Convert cents to dollars
+      variance: cat.variance_cents / 100, // Convert cents to dollars
+      burnRate: cat.budgeted_cents > 0 ? (Math.abs(cat.expense_cents) / cat.budgeted_cents) : 0
+    }));
+    
+    return res.json(legacyFormat);
+  } catch (error) {
+    console.error('Error in getBudgetVsActual (using new system):', error);
+    return res.status(500).json({ error: 'Failed to generate budget vs actual report' });
+  }
+};
+
+// Weekly category actuals (DB truth) aligned with BvA category scope and exclusions
+exports.getWeeklyCategoryActuals = (req, res) => {
+      SELECT 
+        b.budget_id,
+        b.category_id,
+        c.category_name,
+        c.parent_category_id,
+        strftime('%Y-%m', b.period_start) as budget_month,
+        b.period_start,
+        b.period_end,
+        b.budgeted_amount,
+        ROW_NUMBER() OVER (
+          PARTITION BY b.category_id, strftime('%Y-%m', b.period_start) 
+          ORDER BY b.budget_id DESC
+        ) as rn
+      FROM Budgets_legacy b
+      LEFT JOIN Categories c ON c.category_id = b.category_id
+      WHERE b.user_id = ?
+        AND DATE(b.period_start) <= DATE(?) AND DATE(b.period_end) >= DATE(?)
+        AND c.category_name IS NOT NULL
+        AND c.category_name != 'Internal-Transfers'
+    ),
+    CategoryTree AS (
+      SELECT category_id, parent_category_id, category_id as root_id
+      FROM Categories
+      WHERE parent_category_id IS NULL
+      UNION ALL
+      SELECT c.category_id, c.parent_category_id, ct.root_id
+      FROM Categories c
+      INNER JOIN CategoryTree ct ON c.parent_category_id = ct.category_id
+    ),
+    RootBudgets AS (
+      SELECT 
+        ct.root_id AS category_id,
+        (SELECT category_name FROM Categories WHERE category_id = ct.root_id) AS category_name,
+        mb.budget_month,
+        MIN(mb.period_start) AS period_start,
+        MAX(mb.period_end) AS period_end,
+        SUM(mb.budgeted_amount) AS budgeted_amount
+      FROM MonthlyBudgets mb
+      JOIN CategoryTree ct ON mb.category_id = ct.category_id
+      WHERE mb.rn = 1
+      GROUP BY ct.root_id, category_name, mb.budget_month
+    )
+    SELECT 
+      NULL as budget_id,
+      category_id,
+      category_name,
+      NULL as parent_category_id,
+      budget_month,
+      period_start,
+      period_end,
+      budgeted_amount
+    FROM RootBudgets
+    ORDER BY category_name, budget_month
+  ` : `
+    WITH MonthlyBudgets AS (
+      SELECT 
+        b.budget_id,
+        b.category_id,
+        c.category_name,
+        c.parent_category_id,
+        strftime('%Y-%m', b.period_start) as budget_month,
+        b.period_start,
+        b.period_end,
+        b.budgeted_amount,
+        ROW_NUMBER() OVER (
+          PARTITION BY b.category_id, strftime('%Y-%m', b.period_start) 
+          ORDER BY b.budget_id DESC
+        ) as rn
+      FROM Budgets_legacy b
+      LEFT JOIN Categories c ON c.category_id = b.category_id
+      WHERE b.user_id = ?
+        AND DATE(b.period_start) <= DATE(?) AND DATE(b.period_end) >= DATE(?)
+        ${categoryId ? ' AND b.category_id = ?' : ''}
+        AND c.category_name IS NOT NULL
+        AND c.category_name != 'Internal-Transfers'
+    )
+    SELECT 
+      budget_id,
+      category_id,
+      category_name,
+      parent_category_id,
+      budget_month,
+      period_start,
+      period_end,
+      budgeted_amount
+    FROM MonthlyBudgets
+    WHERE rn = 1
+    ORDER BY category_name, budget_month
+  `;
+
+  const budgetParams = mode === 'header'
+    ? [userId, end, start]
+    : (categoryId ? [userId, end, start, categoryId] : [userId, end, start]);
+  
+  console.log('📊 Budget vs Actual - Query parameters:', {
+    userId,
+    start,
+    end,
+    categoryId,
+    mode,
+    budgetParams
+  });
+  
+  // Debug: Check what budget date ranges exist for this user
+  const debugSql = `
+    SELECT 
+      budget_id,
+      category_id,
+      period_start,
+      period_end,
+      budgeted_amount,
+      c.category_name
+    FROM Budgets_legacy b
+    LEFT JOIN Categories c ON c.category_id = b.category_id
+    WHERE b.user_id = ?
+    ORDER BY period_start DESC
+    LIMIT 10
+  `;
+  
+  db.all(debugSql, [userId], (debugErr, debugBudgets) => {
+    if (!debugErr && debugBudgets) {
+      console.log('📊 Debug - User budgets (last 10):', debugBudgets.map(b => ({
+        budget_id: b.budget_id,
+        category_name: b.category_name,
+        period_start: b.period_start,
+        period_end: b.period_end,
+        budgeted_amount: b.budgeted_amount
+      })));
+    }
+  });
+  
+  db.all(budgetSql, budgetParams, (bErr, budgets) => {
+    if (bErr) {
+      console.error('Error fetching budgets:', bErr);
+      return res.status(500).json({ error: 'Failed to fetch budgets' });
+    }
+    
+    console.log('📊 Budget vs Actual - Budgets fetched:', {
+      userId,
+      start,
+      end,
+      categoryId,
+      mode,
+      budgetCount: budgets?.length || 0,
+      sample: budgets?.slice(0, 2),
+      rawBudgetData: budgets?.map(b => ({
+        budget_id: b.budget_id,
+        category_name: b.category_name,
+        budgeted_amount: b.budgeted_amount,
+        period_start: b.period_start,
+        period_end: b.period_end
+      })).slice(0, 3)
+    });
+    
+    if (!budgets || budgets.length === 0) {
+      console.log('📊 No budgets found for date range');
+      return res.json([]);
+    }
+    
+    // Get unique category IDs for actuals query
+    const categoryIds = Array.from(new Set(budgets.map(b => b.category_id)));
+    const placeholders = categoryIds.map(() => '?').join(',');
+    
+    // For header mode, roll up child category actuals to parents
+    // For detail mode, get actuals per category
+    let trxSql;
+    if (mode === 'header') {
+      trxSql = `
+        WITH RECURSIVE CategoryTree AS (
+          SELECT category_id, parent_category_id, category_id as root_id
+          FROM Categories
+          WHERE parent_category_id IS NULL
+          UNION ALL
+          SELECT c.category_id, c.parent_category_id, ct.root_id
+          FROM Categories c
+          INNER JOIN CategoryTree ct ON c.parent_category_id = ct.category_id
+        )
+        SELECT 
+          ct.root_id as category_id,
+          strftime('%Y-%m', t.transaction_date) as month,
+          SUM(CASE WHEN t.signed_amount < 0 THEN ABS(t.signed_amount) ELSE 0 END) AS actual_spent,
+          SUM(CASE WHEN t.signed_amount > 0 THEN t.signed_amount ELSE 0 END) AS actual_income
+        FROM transactions t
+        LEFT JOIN Categories c ON t.category_id = c.category_id
+        LEFT JOIN CategoryTree ct ON t.category_id = ct.category_id
+        WHERE t.user_id = ?
+          AND DATE(t.transaction_date) >= DATE(?) AND DATE(t.transaction_date) <= DATE(?)
+          AND ct.root_id IN (${placeholders})
+          AND (c.category_name IS NULL OR c.category_name != 'Internal-Transfers')
+        GROUP BY ct.root_id, month
+      `;
+    } else {
+      trxSql = `
+        SELECT 
+          t.category_id,
+          strftime('%Y-%m', t.transaction_date) as month,
+          SUM(CASE WHEN t.signed_amount < 0 THEN ABS(t.signed_amount) ELSE 0 END) AS actual_spent,
+          SUM(CASE WHEN t.signed_amount > 0 THEN t.signed_amount ELSE 0 END) AS actual_income
+        FROM transactions t
+        LEFT JOIN Categories c ON t.category_id = c.category_id
+        WHERE t.user_id = ?
+          AND DATE(t.transaction_date) >= DATE(?) AND DATE(t.transaction_date) <= DATE(?)
+          AND t.category_id IN (${placeholders})
+          AND (c.category_name IS NULL OR c.category_name != 'Internal-Transfers')
+        GROUP BY t.category_id, month
+      `;
+    }
+    
+    db.all(trxSql, [userId, start, end, ...categoryIds], (tErr, actualsRows) => {
+      if (tErr) {
+        console.error('Error fetching actuals:', tErr);
+        return res.status(500).json({ error: 'Failed to compute actuals' });
+      }
+      
+      // Build a map of actuals by category and month
+      const actualsMap = new Map();
+      actualsRows.forEach(r => {
+        const key = `${r.category_id}-${r.month}`;
+        actualsMap.set(key, {
+          spent: Number(r.actual_spent) || 0,
+          income: Number(r.actual_income) || 0
+        });
+      });
+      
+      const now = new Date();
+      
+      // Group budgets by category to check if amounts differ across months
+      const categoryBudgets = new Map();
+      budgets.forEach(b => {
+        if (!categoryBudgets.has(b.category_id)) {
+          categoryBudgets.set(b.category_id, []);
+        }
+        categoryBudgets.get(b.category_id).push(Number(b.budgeted_amount) || 0);
+      });
+      
+      // Determine which categories have different budget amounts across months
+      const categoryHasDifferentAmounts = new Map();
+      categoryBudgets.forEach((amounts, categoryId) => {
+        if (amounts.length > 1) {
+          // Check if all amounts are the same
+          const firstAmount = amounts[0];
+          const hasDifferent = amounts.some(amt => amt !== firstAmount);
+          categoryHasDifferentAmounts.set(categoryId, hasDifferent);
+        } else {
+          categoryHasDifferentAmounts.set(categoryId, false);
+        }
+      });
+      
+      const out = budgets.map(b => {
+        const periodStart = new Date(b.period_start);
+        const periodEnd = new Date(b.period_end);
+        const totalDays = Math.max(1, Math.floor((periodEnd - periodStart) / (1000 * 60 * 60 * 24)) + 1);
+        const cappedNow = now > periodEnd ? periodEnd : now;
+        const elapsedDays = Math.max(0, Math.floor((cappedNow - periodStart) / (1000 * 60 * 60 * 24)) + 1);
+        
+        const budgeted = Number(b.budgeted_amount) || 0;
+        
+        // Get actuals for this category and month
+        const actualsKey = `${b.category_id}-${b.budget_month}`;
+        const categoryActuals = actualsMap.get(actualsKey) || { spent: 0, income: 0 };
+        
+        // Determine if this is an income category (negative budget) or expense category (positive budget)
+        const isIncomeCategory = budgeted < 0;
+        
+        let displayBudgeted, actual, variance;
+        
+        if (isIncomeCategory) {
+          displayBudgeted = Math.abs(budgeted);
+          actual = categoryActuals.income;
+          variance = actual - displayBudgeted;
+        } else {
+          displayBudgeted = budgeted;
+          actual = categoryActuals.spent;
+          variance = displayBudgeted - actual;
+        }
+        
+        const burnRate = displayBudgeted > 0 ? (actual / Math.max(1, (elapsedDays / totalDays) * displayBudgeted)) : 0;
+        
+        // Only append month name if this category has different budget amounts across months
+        let displayName = b.category_name;
+        if (categoryHasDifferentAmounts.get(b.category_id)) {
+          // Format month as "MMM YYYY" (e.g., "Sep 2025")
+          const monthDate = new Date(b.period_start);
+          const monthName = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          displayName = `${b.category_name} (${monthName})`;
+        }
+        
+        return {
+          budget_id: b.budget_id,
+          category_id: b.category_id,
+          name: displayName,
+          period_start: b.period_start,
+          period_end: b.period_end,
+          budgeted: displayBudgeted,
+          actual,
+          variance,
+          burnRate
+        };
+      });
+      
+      console.log('📊 Budget vs Actual - Final response:', {
+        resultCount: out.length,
+        sample: out.slice(0, 2)
+      });
+      
+      res.json(out);
+    });
+  });
+};
+
+// Weekly category actuals (DB truth) aligned with BvA category scope and exclusions
+exports.getWeeklyCategoryActuals = (req, res) => {
+  const start = toISODate(req.query.start);
+  const end = toISODate(req.query.end);
+  const userId = req.user?.user_id;
+  if (!userId) return res.status(401).json({ error: 'Authentication required' });
+  if (!start || !end) return res.status(400).json({ error: 'start and end are required (YYYY-MM-DD)' });
+
+  const sql = `
+    WITH cat_set AS (
+      SELECT DISTINCT b.category_id
+      FROM Budgets_legacy b
+      WHERE DATE(b.period_end) >= DATE(?) AND DATE(b.period_start) <= DATE(?)
+    )
+    SELECT 
+      v.category_id,
+      DATE(v.transaction_date, 'weekday 0', '-7 days') AS week_start,
+      DATE(v.transaction_date, 'weekday 0', '-7 days') AS week_key,
+      COALESCE(SUM(v.canonical_amount), 0) AS net_amount
+    FROM v_amounts_normalized v
+    LEFT JOIN Categories c ON c.category_id = v.category_id
+    WHERE v.user_id = ?
+      AND DATE(v.transaction_date) >= DATE(?) 
+      AND DATE(v.transaction_date) <= DATE(?)
+      AND v.category_id IN (SELECT category_id FROM cat_set)
+      AND (c.category_name IS NULL OR c.category_name != 'Internal-Transfers')
+    GROUP BY v.category_id, week_start, week_key
+    ORDER BY week_start ASC
+  `;
+
+  db.all(sql, [start, end, userId, start, end], (err, rows) => {
+    if (err) {
+      console.error('Error fetching weekly category actuals:', err);
+      return res.status(500).json({ error: 'Failed to fetch weekly category actuals' });
+    }
+    res.json(rows || []);
+  });
+};
+
+exports.getAccountBalancesAsOf = (req, res) => {
+  const asOf = toISODate(req.query.asOf);
+  if (!asOf) return res.status(400).json({ error: 'asOf is required (YYYY-MM-DD)' });
+  const sql = `
+    SELECT a.account_id, a.account_name,
+      (
+        a.current_balance - COALESCE((
+          SELECT SUM(signed_amount) FROM transactions t
+          WHERE t.account_id = a.account_id AND DATE(t.transaction_date) > DATE(?)
+        ), 0)
+      ) AS balance_as_of
+    FROM Accounts a
+    ORDER BY a.account_name
+  `;
+  db.all(sql, [asOf], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Failed to compute balances' });
+    res.json(rows || []);
+  });
+};
+
+// New budget reporting endpoints using budget-reporting-service
+const reportingService = require('../services/budget-reporting-service');
+
+exports.getBudgetMonthReport = async (req, res) => {
+  try {
+    const { month } = req.params;
+    const userId = req.user?.user_id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    if (!month) {
+      return res.status(400).json({ error: 'month parameter required (format: YYYY-MM)' });
+    }
+    
+    // Validate month format
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'month must be in format YYYY-MM' });
+    }
+    
+    const report = await reportingService.getMonthReport(userId, month);
+    res.json(report);
+  } catch (error) {
+    console.error('Error generating budget month report:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate budget report' });
+  }
+};
+
+exports.getPendingTransactions = async (req, res) => {
+  try {
+    const { month } = req.params;
+    const userId = req.user?.user_id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    if (!month) {
+      return res.status(400).json({ error: 'month parameter required (format: YYYY-MM)' });
+    }
+    
+    const panel = await reportingService.getPendingTransactionsPanel(userId, month);
+    res.json(panel);
+  } catch (error) {
+    console.error('Error fetching pending transactions:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch pending transactions' });
+  }
+};
+
+exports.getBudgetMonthSummary = async (req, res) => {
+  try {
+    const { month } = req.params;
+    const userId = req.user?.user_id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    if (!month) {
+      return res.status(400).json({ error: 'month parameter required (format: YYYY-MM)' });
+    }
+    
+    const summary = await reportingService.getMonthSummary(userId, month);
+    res.json(summary);
+  } catch (error) {
+    console.error('Error generating budget month summary:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate budget summary' });
+  }
+};
+
+

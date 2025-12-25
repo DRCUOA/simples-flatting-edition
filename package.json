@@ -1,0 +1,50 @@
+{
+  "name": "simples",
+  "version": "3.0.13",
+  "description": "Simplified Financial Management System for Household Budgets",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:full": "DEV_FULL=true concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm start",
+    "prod": "concurrently \"npm run prod:server\" \"npm run prod:client\"",
+    "prod:server": "cd server && npm run prod",
+    "prod:client": "cd client && npm run build && npm run preview",
+    "build": "npm run build:client",
+    "build:client": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "start:prod": "cd server && npm run prod",
+    "setup:dev": "cd server && npm run setup:dev",
+    "setup:prod": "cd server && npm run setup:prod",
+    "setup": "cd server && npm run setup",
+    "test:prod": "cd server && npm run test:prod",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "test": "cd server && npm test",
+    "test:coverage": "cd server && npm run test:coverage"
+  },
+  "keywords": [
+    "finance",
+    "budgeting",
+    "transactions",
+    "vue",
+    "express",
+    "sqlite"
+  ],
+  "author": "Richard",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "fast-fuzzy": "^1.12.0"
+  }
+}

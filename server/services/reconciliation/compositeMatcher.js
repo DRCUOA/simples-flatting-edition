@@ -30,7 +30,11 @@ async function runCompositeMatching(userId, accountId, sessionParams) {
   } = sessionParams;
 
   try {
-    console.log(`Starting composite matching for user ${userId}, account ${accountId}`);
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    
+    if (isDevelopment) {
+      console.log(`Starting composite matching for user ${userId}, account ${accountId}`);
+    }
     
     const results = {
       exact_matches: [],
@@ -44,25 +48,39 @@ async function runCompositeMatching(userId, accountId, sessionParams) {
     const startTime = Date.now();
 
     // Step 1: Run exact matching first (highest confidence)
-    console.log('Running exact matching...');
+    if (isDevelopment) {
+      console.log('Running exact matching...');
+    }
     const exactMatches = await findExactMatches(userId, accountId, sessionParams);
     results.exact_matches = exactMatches;
-    console.log(`Found ${exactMatches.length} exact matches`);
+    if (isDevelopment) {
+      console.log(`Found ${exactMatches.length} exact matches`);
+    }
 
     // Step 2: Run keyword matching on remaining unmatched items
-    console.log('Running keyword matching...');
+    if (isDevelopment) {
+      console.log('Running keyword matching...');
+    }
     const keywordMatches = await findKeywordMatches(userId, accountId, sessionParams);
     results.keyword_matches = keywordMatches;
-    console.log(`Found ${keywordMatches.length} keyword matches`);
+    if (isDevelopment) {
+      console.log(`Found ${keywordMatches.length} keyword matches`);
+    }
 
     // Step 3: Run fuzzy matching on remaining unmatched items
-    console.log('Running fuzzy matching...');
+    if (isDevelopment) {
+      console.log('Running fuzzy matching...');
+    }
     const fuzzyMatches = await findFuzzyMatches(userId, accountId, sessionParams);
     results.fuzzy_matches = fuzzyMatches;
-    console.log(`Found ${fuzzyMatches.length} fuzzy matches`);
+    if (isDevelopment) {
+      console.log(`Found ${fuzzyMatches.length} fuzzy matches`);
+    }
 
     // Step 4: Combine all matches and resolve conflicts
-    console.log('Resolving match conflicts...');
+    if (isDevelopment) {
+      console.log('Resolving match conflicts...');
+    }
     const allMatches = [...exactMatches, ...keywordMatches, ...fuzzyMatches];
     const resolvedMatches = resolveMatchConflicts(allMatches);
     results.final_matches = resolvedMatches;
@@ -71,13 +89,22 @@ async function runCompositeMatching(userId, accountId, sessionParams) {
     results.statistics = calculateCompositeStatistics(results);
     results.processing_time = Date.now() - startTime;
 
-    console.log(`Composite matching completed in ${results.processing_time}ms`);
-    console.log(`Final matches: ${resolvedMatches.length}`);
+    if (isDevelopment) {
+      console.log(`Composite matching completed in ${results.processing_time}ms`);
+      console.log(`Final matches: ${resolvedMatches.length}`);
+    }
 
     return results;
 
   } catch (error) {
-    console.error('Error in composite matching:', error);
+    // Always log errors, but use proper error logging in production
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    if (isDevelopment) {
+      console.error('Error in composite matching:', error);
+    } else {
+      // In production, errors should be logged through proper logging infrastructure
+      // This will be caught by error handler middleware
+    }
     throw new Error(`Composite matching failed: ${error.message}`);
   }
 }
@@ -242,7 +269,11 @@ async function runStrategyMatching(strategy, userId, accountId, sessionParams) {
     return results;
 
   } catch (error) {
-    console.error(`Error in ${strategy} matching:`, error);
+    // Errors will be caught by error handler middleware
+    // Only log in development for debugging
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`Error in ${strategy} matching:`, error);
+    }
     throw new Error(`${strategy} matching failed: ${error.message}`);
   }
 }

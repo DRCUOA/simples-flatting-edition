@@ -57,7 +57,11 @@ async function findExactMatches(userId, accountId, sessionParams) {
     return exactMatches;
 
   } catch (error) {
-    console.error('Error in exact matcher:', error);
+    // Error will be caught by error handler middleware
+    // Only log in development for debugging
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error in exact matcher:', error);
+    }
     throw new Error(`Exact matching failed: ${error.message}`);
   }
 }

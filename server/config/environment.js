@@ -130,6 +130,42 @@ function validateEnvironment() {
     }
   }
 
+  // Display results if there are errors (fatal)
+  if (errors.length > 0) {
+    console.error('\n' + '='.repeat(80));
+    console.error('🚨 ENVIRONMENT VALIDATION FAILED - Cannot start server');
+    console.error('='.repeat(80));
+    console.error('\nCritical Issues:\n');
+    errors.forEach(err => console.error(`  ${err}`));
+    
+    console.error('\n' + '-'.repeat(80));
+    console.error('💡 Quick Fix - Generate secure secrets:\n');
+    console.error('  node -e "console.log(\'JWT_ACCESS_SECRET=\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    console.error('  node -e "console.log(\'JWT_REFRESH_SECRET=\' + require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    console.error('\n  Add these to your .env file in the server directory');
+    console.error('='.repeat(80) + '\n');
+  }
+
+  // Display warnings (non-fatal) in production
+  if (warnings.length > 0 && isProduction) {
+    console.warn('\n' + '='.repeat(80));
+    console.warn('⚠️  ENVIRONMENT WARNINGS (Production)');
+    console.warn('='.repeat(80));
+    warnings.forEach(warn => console.warn(`  ${warn}`));
+    console.warn('='.repeat(80) + '\n');
+  }
+
+  // Success message (only in development or if no warnings in production)
+  if (errors.length === 0) {
+    if (!isProduction) {
+      console.log('✓ Environment validation passed');
+      console.log('  Environment: Development');
+    } else if (warnings.length === 0) {
+      console.log('✓ Environment validation passed');
+      console.log('  Environment: Production (enhanced security checks enabled)');
+    }
+  }
+
   return { errors, warnings, isProduction };
 }
 

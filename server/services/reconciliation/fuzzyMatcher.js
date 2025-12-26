@@ -103,7 +103,11 @@ async function findFuzzyMatches(userId, accountId, sessionParams) {
     });
 
   } catch (error) {
-    console.error('Error in fuzzy matcher:', error);
+    // Error will be caught by error handler middleware
+    // Only log in development for debugging
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error in fuzzy matcher:', error);
+    }
     throw new Error(`Fuzzy matching failed: ${error.message}`);
   }
 }

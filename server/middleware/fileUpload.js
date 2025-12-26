@@ -129,7 +129,10 @@ const handleUploadError = (err, req, res, next) => {
   if (req.file && req.file.path) {
     fs.unlink(req.file.path, (unlinkErr) => {
       if (unlinkErr) {
-        console.error('Failed to cleanup uploaded file:', unlinkErr);
+        // Log file cleanup errors, but only in development to avoid noise
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Failed to cleanup uploaded file:', unlinkErr);
+        }
       }
     });
   }
@@ -220,8 +223,10 @@ const validateFileContent = async (req, res, next) => {
                            normalizedContent.match(/^\s*OFXHEADER/i);
       
       if (!hasOFXMarker && normalizedContent.trim().length > 0) {
-        // Might still be valid OFX, but warn
-        console.warn('OFX file may not have standard markers');
+        // Might still be valid OFX, but warn only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('OFX file may not have standard markers');
+        }
       }
       
       // Store file info
@@ -274,7 +279,10 @@ const ensureFileCleanup = (req, res, next) => {
     if (req.file && req.file.path) {
       fs.unlink(req.file.path, (err) => {
         if (err && err.code !== 'ENOENT') {
-          console.error('Failed to cleanup uploaded file:', err);
+          // Log file cleanup errors, but only in development to avoid noise
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Failed to cleanup uploaded file:', err);
+          }
         }
       });
     }

@@ -219,8 +219,9 @@ const securityLogger = (req, res, next) => {
   const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(requestString));
 
   if (isSuspicious) {
-    console.warn('Suspicious request detected:', logEntry);
-    // In production, you might want to log this to a security monitoring system
+    // Use security logger for proper logging
+    const { securityLogger } = require('./logging');
+    securityLogger('SUSPICIOUS_REQUEST', logEntry, req);
   }
 
   next();

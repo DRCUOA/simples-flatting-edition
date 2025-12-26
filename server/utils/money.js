@@ -32,7 +32,9 @@ const roundMoney = (amount) => {
     const decimal = new Decimal(amount);
     return decimal.toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[roundMoney] Invalid amount:', amount, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[roundMoney] Invalid amount:', amount, error);
+    }
     return 0;
   }
 };
@@ -52,7 +54,9 @@ const addMoney = (...amounts) => {
     });
     return sum.toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[addMoney] Error adding amounts:', amounts, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[addMoney] Error adding amounts:', amounts, error);
+    }
     return 0;
   }
 };
@@ -69,7 +73,9 @@ const subtractMoney = (a, b) => {
     const decimalB = new Decimal(b || 0);
     return decimalA.minus(decimalB).toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[subtractMoney] Error subtracting amounts:', a, b, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[subtractMoney] Error subtracting amounts:', a, b, error);
+    }
     return 0;
   }
 };
@@ -86,7 +92,9 @@ const multiplyMoney = (amount, multiplier) => {
     const decimalMultiplier = new Decimal(multiplier || 0);
     return decimalAmount.times(decimalMultiplier).toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[multiplyMoney] Error multiplying amounts:', amount, multiplier, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[multiplyMoney] Error multiplying amounts:', amount, multiplier, error);
+    }
     return 0;
   }
 };
@@ -102,12 +110,16 @@ const divideMoney = (amount, divisor) => {
     const decimalAmount = new Decimal(amount || 0);
     const decimalDivisor = new Decimal(divisor || 0);
     if (decimalDivisor.isZero()) {
-      console.warn('[divideMoney] Division by zero');
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[divideMoney] Division by zero');
+      }
       return 0;
     }
     return decimalAmount.dividedBy(decimalDivisor).toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[divideMoney] Error dividing amounts:', amount, divisor, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[divideMoney] Error dividing amounts:', amount, divisor, error);
+    }
     return 0;
   }
 };
@@ -126,7 +138,9 @@ const moneyEquals = (a, b, epsilon = CURRENCY_EPSILON) => {
     const diff = decimalA.minus(decimalB).abs();
     return diff.lessThanOrEqualTo(new Decimal(epsilon));
   } catch (error) {
-    console.warn('[moneyEquals] Error comparing amounts:', a, b, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[moneyEquals] Error comparing amounts:', a, b, error);
+    }
     return false;
   }
 };
@@ -151,7 +165,9 @@ const absMoney = (amount) => {
     const decimal = new Decimal(amount || 0);
     return decimal.abs().toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[absMoney] Error getting absolute value:', amount, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[absMoney] Error getting absolute value:', amount, error);
+    }
     return 0;
   }
 };
@@ -173,7 +189,9 @@ const maxMoney = (...amounts) => {
     });
     return max.toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[maxMoney] Error getting maximum:', amounts, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[maxMoney] Error getting maximum:', amounts, error);
+    }
     return 0;
   }
 };
@@ -195,7 +213,9 @@ const minMoney = (...amounts) => {
     });
     return min.toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toNumber();
   } catch (error) {
-    console.warn('[minMoney] Error getting minimum:', amounts, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[minMoney] Error getting minimum:', amounts, error);
+    }
     return 0;
   }
 };
@@ -260,7 +280,9 @@ const formatMoney = (amount) => {
     const decimal = new Decimal(amount || 0);
     return decimal.toDecimalPlaces(CURRENCY_DECIMALS, Decimal.ROUND_HALF_UP).toFixed(CURRENCY_DECIMALS);
   } catch (error) {
-    console.warn('[formatMoney] Error formatting amount:', amount, error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[formatMoney] Error formatting amount:', amount, error);
+    }
     return '0.00';
   }
 };

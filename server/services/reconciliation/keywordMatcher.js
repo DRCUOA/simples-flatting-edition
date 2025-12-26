@@ -95,7 +95,11 @@ async function findKeywordMatches(userId, accountId, sessionParams) {
     });
 
   } catch (error) {
-    console.error('Error in keyword matcher:', error);
+    // Error will be caught by error handler middleware
+    // Only log in development for debugging
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error in keyword matcher:', error);
+    }
     throw new Error(`Keyword matching failed: ${error.message}`);
   }
 }

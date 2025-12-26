@@ -188,7 +188,10 @@ const DAO_SECURITY_CONFIG = {
 const secureDAO = (dao, daoType) => {
   const config = DAO_SECURITY_CONFIG[daoType];
   if (!config) {
-    console.warn(`No security configuration found for DAO type: ${daoType}`);
+    // Log warning in development, but don't expose in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`No security configuration found for DAO type: ${daoType}`);
+    }
     return dao;
   }
 

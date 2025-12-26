@@ -12,6 +12,7 @@ const statementRouter = require('./statement-router');
 const reconciliationRouter = require('./reconciliation-router');
 const auditRouter = require('./audit-router');
 const keywordRulesRouter = require('./keyword-rules-router');
+const importExportRouter = require('./import-export-router');
 
 // Transaction routes
 router.use('/transactions', transactionRouter);
@@ -48,5 +49,8 @@ router.use('/recon', reconciliationRouter);
 
 // Audit routes
 router.use('/audit', auditRouter);
+
+// Import-Export routes
+router.use('/import-export', importExportRouter);
 
 module.exports = router;

@@ -25,6 +25,7 @@ The document content is captured in two different formats, one optimized for hum
 
 | Version | Date | Type | Component | Description |
 |---------|------|------|------------|-------------|
+| 0.0.8 | 01/26/25 | Added | feature | Import-export functionality for full user data migration - added comprehensive import-export service using DAOs (categoryDAO, accountDAO, transactionDAO, etc.) for proper business logic execution. Export gathers all user-specific data in dependency order. Import handles foreign key relationships, validates schema compatibility, uses database transactions for atomicity. Refactored to use transactionDAO for transactions ensuring balance calculations are maintained. Created import-export endpoints (GET /api/import-export/export, POST /api/import-export/import, GET /api/import-export/summary). |
 | 0.0.7 | 01/26/25 | Changed | performance | Phase 3: Performance and maintainability optimization - optimized reconciliation store sessionSummary from O(n*m) to O(n+m) complexity using Map for O(1) lookups, optimized batch balance recalculation to deduplicate account IDs before processing. Reduced computational complexity and eliminated redundant operations. |
 | 0.0.6 | 01/26/25 | Changed | production | Phase 2 Third Pass: Deep production hardening audit - applied sanitizeInput globally to all routes (security), gated 30+ console.error/warn statements in models with environment checks (production log cleanliness), verified all error handling paths, confirmed input validation coverage. Enhanced production security and log hygiene. |
 | 0.0.5 | 01/26/25 | Changed | codebase | Phase 1 Deep Audit: Comprehensive re-analysis of dead code removal - verified zero additional dead code found. Confirmed all 100+ server files and 50+ client files are used, all dependencies verified, all routes/controllers/middleware/utilities active. Found 8 potentially unused utility functions in transformers.js but retained as small utilities that may be useful. Phase 1 confirmed complete and comprehensive. |
@@ -52,6 +53,20 @@ The document content is captured in two different formats, one optimized for hum
   "versioning": "semantic",
   "format": "keepachangelog",
   "versions": [
+    {
+      "version": "0.0.8",
+      "date": "01/26/25",
+      "changes": [
+        {
+          "type": "added",
+          "category": "feature",
+          "component": "import-export",
+          "description": "Import-export functionality for full user data migration - added comprehensive import-export service using DAOs (categoryDAO, accountDAO, transactionDAO, etc.) for proper business logic execution. Export gathers all user-specific data in dependency order. Import handles foreign key relationships, validates schema compatibility, uses database transactions for atomicity. Refactored to use transactionDAO for transactions ensuring balance calculations are maintained. Created import-export endpoints (GET /api/import-export/export, POST /api/import-export/import, GET /api/import-export/summary).",
+          "files": ["server/services/import-export-service.js", "server/controllers/import-export-controller.js", "server/routes/import-export-router.js", "server/routes/main-router.js"],
+          "dependencies": []
+        }
+      ]
+    },
     {
       "version": "0.0.5",
       "date": "01/26/25",

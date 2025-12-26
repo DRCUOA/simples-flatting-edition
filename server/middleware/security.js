@@ -121,12 +121,23 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Production: strictly enforce FRONTEND_ORIGIN
     // Support both FRONTEND_URL (new standard) and FRONTEND_ORIGIN (backward compatibility)
     const frontendOrigin = process.env.FRONTEND_URL || process.env.FRONTEND_ORIGIN || 'http://localhost:8085';
     
+    // Build allowed origins list
+    // In production, start with configured frontend origin
+    // Always include localhost origins for local development/preview
     const allowedOrigins = isProduction 
-      ? [frontendOrigin] // Production: only allow configured frontend
+      ? [
+          frontendOrigin, // Production: configured frontend
+          // Also allow localhost origins in production for local testing/preview
+          'http://localhost:4173', // Vite preview server
+          'http://localhost:5173', // Vite dev server
+          'http://localhost:8085', // Default frontend port
+          'http://127.0.0.1:4173', // Vite preview server
+          'http://127.0.0.1:5173', // Vite dev server
+          'http://127.0.0.1:8085'  // Default frontend port
+        ]
       : [
           frontendOrigin,
           'http://localhost:3004',

@@ -34,6 +34,7 @@ const {
   sanitizeHeaders,
   apiLimiter
 } = require('./middleware/security');
+const { sanitizeInput } = require('./middleware/validation');
 const { 
   requestId, 
   requestLogger, 
@@ -67,6 +68,9 @@ app.use(express.urlencoded({
   limit: '1mb',
   parameterLimit: 100 // Limit number of parameters
 }));
+
+// Input sanitization - sanitize all request body, params, and query strings
+app.use(sanitizeInput);
 
 // Logging and monitoring middleware
 app.use(requestLogger);

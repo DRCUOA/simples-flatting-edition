@@ -73,7 +73,9 @@ const keywordRulesDAO = {
 
         db.run(createIndexes[indexCount], [], (indexErr) => {
           if (indexErr) {
-            console.warn('Index creation warning:', indexErr.message);
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('Index creation warning:', indexErr.message);
+            }
           }
           indexCount++;
           createNextIndex();

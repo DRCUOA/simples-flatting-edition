@@ -1061,7 +1061,9 @@ const accountDAO = {
         accountDAO.updateAccountBalance(adjustment.account_id, reverseAmount, (balanceErr) => {
           if (balanceErr) {
             // Log error but don't fail deletion - adjustment is already deleted
-            console.error('Failed to reverse account balance after deleting adjustment:', balanceErr);
+            if (process.env.NODE_ENV !== 'production') {
+              console.error('Failed to reverse account balance after deleting adjustment:', balanceErr);
+            }
           }
           callback(null, { 
             changes: this.changes,

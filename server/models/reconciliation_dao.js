@@ -356,7 +356,9 @@ const reconciliationDAO = {
             try {
               stmt.finalize();
             } catch (finalizeErr) {
-              console.error('Error finalizing statement:', finalizeErr);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('Error finalizing statement:', finalizeErr);
+              }
               db.run('ROLLBACK');
               reject(finalizeErr);
               return;
@@ -406,7 +408,9 @@ const reconciliationDAO = {
                 );
               } else {
                 errorCount++;
-                console.error(`Error inserting match ${index}:`, err.message);
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error(`Error inserting match ${index}:`, err.message);
+                }
                 checkComplete();
               }
             } else {

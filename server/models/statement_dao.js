@@ -196,7 +196,9 @@ const statementDAO = {
           ], function(err) {
             if (err) {
               errorCount++;
-              console.error(`Error inserting statement line ${index}:`, err.message);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error(`Error inserting statement line ${index}:`, err.message);
+              }
             } else {
               insertedCount++;
             }

@@ -302,7 +302,9 @@ const auditDAO = {
                 verification: verification
               };
             } catch (err) {
-              console.error(`Error reading verification file ${filename}:`, err);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error(`Error reading verification file ${filename}:`, err);
+              }
               return null;
             }
           })
@@ -320,7 +322,9 @@ const auditDAO = {
 
         logs.push(...filteredVerificationLogs);
       } catch (err) {
-        console.error('Error reading category verification files:', err);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error reading category verification files:', err);
+        }
       }
       checkComplete();
     })();
@@ -396,7 +400,9 @@ const auditDAO = {
         );
         stats.category_verification_files = verificationFiles.length;
       } catch (err) {
-        console.error('Error counting category verification files:', err);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error counting category verification files:', err);
+        }
         stats.category_verification_files = 0;
       }
       checkComplete();
@@ -504,7 +510,9 @@ const auditDAO = {
                       }
                       
                       if (recalcErrors.length > 0) {
-                        console.error('Some balance recalculations failed:', recalcErrors);
+                        if (process.env.NODE_ENV !== 'production') {
+                          console.error('Some balance recalculations failed:', recalcErrors);
+                        }
                       }
                       
                       callback(null, {

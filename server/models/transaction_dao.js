@@ -208,7 +208,9 @@ const transactionDAO = {
             
             // Add timeout to prevent hanging
             const timeout = setTimeout(() => {
-              console.error(`Balance recalculation timeout for account ${accountId}`);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error(`Balance recalculation timeout for account ${accountId}`);
+              }
               recalcCount++;
               if (recalcCount === accountIdsArray.length) {
                 resolve({
@@ -222,7 +224,9 @@ const transactionDAO = {
             accountDAO.updateLastImportedTransactionDate(accountId, latestDate, (dateErr) => {
               if (dateErr) {
                 // Log error but don't fail the import
-                console.error(`Failed to update last_imported_transaction_date for account ${accountId}:`, dateErr);
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error(`Failed to update last_imported_transaction_date for account ${accountId}:`, dateErr);
+                }
               }
               
               // Update balance: opening_balance + sum_of_transactions
@@ -231,7 +235,9 @@ const transactionDAO = {
                 recalcCount++;
                 if (balErr) {
                   // Log error but don't fail the import
-                  console.error(`Failed to recalculate balance for account ${accountId}:`, balErr);
+                  if (process.env.NODE_ENV !== 'production') {
+                    console.error(`Failed to recalculate balance for account ${accountId}:`, balErr);
+                  }
                   recalcErrors.push({ accountId, error: balErr.message || String(balErr) });
                 } else {
                   // Mark account as processed in queue (triggers will have queued it)
@@ -253,7 +259,9 @@ const transactionDAO = {
                 if (recalcCount === accountIdsArray.length) {
                   // Always resolve - balance recalculation errors are logged but don't fail the import
                   if (recalcErrors.length > 0) {
-                    console.warn(`Balance recalculation had ${recalcErrors.length} error(s) but import succeeded`);
+                    if (process.env.NODE_ENV !== 'production') {
+                      console.warn(`Balance recalculation had ${recalcErrors.length} error(s) but import succeeded`);
+                    }
                   }
                   resolve({
                     importedCount,
@@ -373,7 +381,9 @@ const transactionDAO = {
       // Delete reconciliation matches first (foreign key constraint)
       db.run('DELETE FROM ReconciliationMatches WHERE transaction_id = ? AND user_id = ?', [id, userId], (matchesErr) => {
         if (matchesErr) {
-          console.error('Error deleting reconciliation matches:', matchesErr);
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Error deleting reconciliation matches:', matchesErr);
+          }
           // Continue anyway - matches might not exist
         }
         
@@ -423,7 +433,9 @@ const transactionDAO = {
       const checkMatchesSql = `SELECT COUNT(*) as count FROM ReconciliationMatches WHERE transaction_id IN (${placeholders}) AND user_id = ? AND active = 1`;
       db.get(checkMatchesSql, [...transactionIds, userId], (checkErr, matchResult) => {
         if (checkErr) {
-          console.error('Error checking reconciliation matches:', checkErr);
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Error checking reconciliation matches:', checkErr);
+          }
           return callback(checkErr);
         }
         
@@ -439,7 +451,9 @@ const transactionDAO = {
           const deleteMatchesSql = `DELETE FROM ReconciliationMatches WHERE transaction_id IN (${placeholders}) AND user_id = ?`;
           db.run(deleteMatchesSql, [...transactionIds, userId], (matchesErr) => {
             if (matchesErr) {
-              console.error('Error deleting reconciliation matches:', matchesErr);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('Error deleting reconciliation matches:', matchesErr);
+              }
               return callback(matchesErr);
             }
             proceedWithDelete();
@@ -454,7 +468,9 @@ const transactionDAO = {
           
           db.all(getSql, [...transactionIds, userId], (getErr, transactions) => {
             if (getErr) {
-              console.error('Error fetching transactions for batch delete:', getErr);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('Error fetching transactions for batch delete:', getErr);
+              }
               return callback(getErr);
             }
             
@@ -462,7 +478,9 @@ const transactionDAO = {
             const deleteSql = `DELETE FROM transactions WHERE transaction_id IN (${placeholders}) AND user_id = ?`;
             db.run(deleteSql, [...transactionIds, userId], function(err) {
               if (err) {
-                console.error('Error deleting transactions:', err);
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error('Error deleting transactions:', err);
+                }
                 return callback(err);
               }
           
@@ -482,7 +500,9 @@ const transactionDAO = {
           transactions.forEach((transaction) => {
             const accountId = transaction.account_id;
             if (!accountId) {
-              console.error('Transaction missing account_id:', transaction);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('Transaction missing account_id:', transaction);
+              }
               recalcCount++;
               if (recalcCount === transactions.length) {
                 callback(null, { deletedCount });
@@ -493,7 +513,9 @@ const transactionDAO = {
             accountDAO.updateAccountBalanceFromTransactions(accountId, (balErr, result) => {
               recalcCount++;
               if (balErr) {
-                console.error(`Error recalculating balance for account ${accountId}:`, balErr);
+                if (process.env.NODE_ENV !== 'production') {
+                  console.error(`Error recalculating balance for account ${accountId}:`, balErr);
+                }
                 recalcErrors.push({ accountId, error: balErr });
               } else {
                 // Mark account as processed in queue (triggers will have queued it)
@@ -511,7 +533,9 @@ const transactionDAO = {
               if (recalcCount === transactions.length) {
                 if (recalcErrors.length > 0) {
                   const errorMsg = `Failed to recalculate balances: ${recalcErrors.map(e => e.accountId + ': ' + (e.error?.message || String(e.error))).join(', ')}`;
-                  console.error('Balance recalculation errors:', recalcErrors);
+                  if (process.env.NODE_ENV !== 'production') {
+                    console.error('Balance recalculation errors:', recalcErrors);
+                  }
                   return callback(new Error(errorMsg));
                 }
                 callback(null, { deletedCount });
@@ -523,7 +547,9 @@ const transactionDAO = {
         }
       });
     } catch (error) {
-      console.error('Unexpected error in batchDeleteTransactions:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Unexpected error in batchDeleteTransactions:', error);
+      }
       return callback(error);
     }
   },
@@ -722,11 +748,15 @@ const transactionDAO = {
           }
           accountDAO.getAccountById(targetAccountId, (accErr, account) => {
             if (accErr) {
-              console.error('[updateTransaction] Error fetching account:', accErr);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('[updateTransaction] Error fetching account:', accErr);
+              }
               return reject(accErr);
             }
             if (!account) {
-              console.error('[updateTransaction] Account not found:', targetAccountId);
+              if (process.env.NODE_ENV !== 'production') {
+                console.error('[updateTransaction] Account not found:', targetAccountId);
+              }
               return reject(new Error('Account not found'));
             }
             const basis = {
@@ -760,7 +790,9 @@ const transactionDAO = {
       const keywordRulesDAO = require('./keyword_rules_dao');
       keywordRulesDAO.findMatchingCategory(userId, description, (keywordErr, keywordMatch) => {
         if (keywordErr) {
-          console.error('Error checking keyword rules:', keywordErr);
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Error checking keyword rules:', keywordErr);
+          }
           // Continue with historical matching if keyword check fails
         }
 
@@ -1059,7 +1091,9 @@ const transactionDAO = {
 
                   if (recalcCount === affectedAccountIds.size) {
                     if (recalcErrors.length > 0) {
-                      console.warn('Some balance recalculations failed:', recalcErrors);
+                      if (process.env.NODE_ENV !== 'production') {
+                        console.warn('Some balance recalculations failed:', recalcErrors);
+                      }
                     }
                     resolve({ 
                       updatedCount, 

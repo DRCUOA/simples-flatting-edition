@@ -190,20 +190,26 @@ function gracefulShutdown(signal) {
   }
   
   // Stop accepting new connections
-  server.close(() => {
+  server.close(async () => {
     if (!isProduction) {
       console.log('HTTP server closed');
     }
     
-    // Close database connection
-    closeConnection();
-    
-    if (!isProduction) {
-      console.log('Database connection closed');
-      console.log('Graceful shutdown complete');
+    // Close database connection and wait for it to complete
+    try {
+      await closeConnection();
+      if (!isProduction) {
+        console.log('Database connection closed');
+        console.log('Graceful shutdown complete');
+      }
+      process.exit(0);
+    } catch (error) {
+      // Log error but still exit - database may be in inconsistent state
+      if (!isProduction) {
+        console.error('Error during database close:', error.message);
+      }
+      process.exit(1);
     }
-    
-    process.exit(0);
   });
   
   // Force shutdown after 10 seconds if graceful shutdown doesn't complete

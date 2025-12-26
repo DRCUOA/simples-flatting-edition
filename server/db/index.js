@@ -60,7 +60,10 @@ const initializeDatabase = (database) => {
         console.error('❌ Failed to enable WAL mode:', err.message);
         return reject(new Error('Failed to enable WAL mode: ' + err.message));
       }
-      console.log('✓ SQLite WAL mode enabled (supports concurrent reads/writes)');
+      // Only log success in development
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✓ SQLite WAL mode enabled (supports concurrent reads/writes)');
+      }
       pragmaSettings.push('WAL mode enabled');
 
       // Set synchronous mode for balance of performance/durability
@@ -78,7 +81,10 @@ const initializeDatabase = (database) => {
           if (err) {
             console.warn('⚠️  Failed to set cache size:', err.message);
           } else {
-            console.log('✓ Cache size set to 64MB');
+            // Only log success in development
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('✓ Cache size set to 64MB');
+            }
             pragmaSettings.push('Cache: 64MB');
           }
 
@@ -88,7 +94,10 @@ const initializeDatabase = (database) => {
             if (err) {
               console.warn('⚠️  Failed to set busy timeout:', err.message);
             } else {
-              console.log('✓ Busy timeout set to 5000ms');
+              // Only log success in development
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('✓ Busy timeout set to 5000ms');
+              }
               pragmaSettings.push('Busy timeout: 5000ms');
             }
 
@@ -98,7 +107,10 @@ const initializeDatabase = (database) => {
                 console.error('❌ Failed to enable foreign key constraints:', err.message);
                 return reject(new Error('Failed to enable foreign keys: ' + err.message));
               }
-              console.log('✓ Foreign key constraints enabled');
+              // Only log success in development
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('✓ Foreign key constraints enabled');
+              }
               pragmaSettings.push('Foreign keys: enabled');
 
               // Set temp store to memory for better performance
@@ -130,8 +142,11 @@ const initializeDatabase = (database) => {
                       return reject(error);
                     }
 
-                    console.log('✓ Database initialization complete');
-                    console.log('  Configuration:', pragmaSettings.join(', '));
+                    // Only log success in development
+                    if (process.env.NODE_ENV !== 'production') {
+                      console.log('✓ Database initialization complete');
+                      console.log('  Configuration:', pragmaSettings.join(', '));
+                    }
                     ensureStatementOwnershipColumns()
                       .then(resolve)
                       .catch((schemaErr) => {
@@ -164,12 +179,16 @@ const getConnection = () => {
         sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
         (err) => {
           if (err) {
+            // Always log critical database connection errors
             console.error('❌ Failed to connect to database:', err.message);
             db = null;
             throw err;
           }
           
-          console.log('✓ Database connection established:', dbPath);
+          // Only log success in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('✓ Database connection established:', dbPath);
+          }
           
           // Initialize database settings asynchronously
           if (!isInitialized && !initializationPromise) {
@@ -179,6 +198,7 @@ const getConnection = () => {
                 initializationPromise = null;
               })
               .catch((error) => {
+                // Always log critical initialization errors
                 console.error('❌ Database initialization failed:', error.message);
                 // Close the connection if initialization fails
                 if (db) {
@@ -195,10 +215,12 @@ const getConnection = () => {
 
       // Set up error handler for the connection
       db.on('error', (err) => {
+        // Always log critical database errors
         console.error('❌ Database error:', err.message);
       });
 
     } catch (error) {
+      // Always log critical connection exceptions
       console.error('❌ Exception creating database connection:', error.message);
       db = null;
       throw error;
@@ -216,10 +238,14 @@ const closeConnection = () => {
     if (db) {
       db.close((err) => {
         if (err) {
+          // Always log critical close errors
           console.error('❌ Error closing database:', err.message);
           reject(err);
         } else {
-          console.log('✓ Database connection closed');
+          // Only log success in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('✓ Database connection closed');
+          }
           db = null;
           isInitialized = false;
           initializationPromise = null;
@@ -294,7 +320,12 @@ const runQuery = (sql, params = []) => {
     const connection = getConnection();
     connection.run(sql, params, function(err) {
       if (err) {
-        console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        // Always log query errors, but only include SQL in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        } else {
+          console.error('❌ Query error:', err.message);
+        }
         reject(err);
       } else {
         resolve({ changes: this.changes, lastID: this.lastID });
@@ -311,7 +342,12 @@ const getOne = (sql, params = []) => {
     const connection = getConnection();
     connection.get(sql, params, (err, row) => {
       if (err) {
-        console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        // Always log query errors, but only include SQL in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        } else {
+          console.error('❌ Query error:', err.message);
+        }
         reject(err);
       } else {
         resolve(row || null);
@@ -328,7 +364,12 @@ const getAll = (sql, params = []) => {
     const connection = getConnection();
     connection.all(sql, params, (err, rows) => {
       if (err) {
-        console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        // Always log query errors, but only include SQL in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('❌ Query error:', err.message, '\n  SQL:', sql);
+        } else {
+          console.error('❌ Query error:', err.message);
+        }
         reject(err);
       } else {
         resolve(rows || []);

@@ -36,8 +36,11 @@ if (JWT_ACCESS_SECRET === JWT_REFRESH_SECRET) {
 }
 
 // Warn if using default issuer/audience in production
+// This warning is important for security, so we log it even in production
+// but it should be addressed during deployment
 if (process.env.NODE_ENV === 'production') {
   if (JWT_ISS === 'financial-app' || JWT_AUD === 'financial-app-users') {
+    // Security warning - log even in production, but use proper logging
     console.warn(
       'WARNING: Using default JWT_ISS or JWT_AUD in production. ' +
       'Set these environment variables to unique values for your application.'

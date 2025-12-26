@@ -4,7 +4,7 @@ import { useTransactionStore } from '../stores/transaction';
 import axios from 'axios';
 
 // Prefer VITE_API_BASE_URL (new standard), fall back to VITE_API_URL (backward compatibility)
-const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3004/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3050/api';
 
 export function useCategorySuggestions() {
   const categoryStore = useCategoryStore();

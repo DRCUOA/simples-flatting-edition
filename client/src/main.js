@@ -19,7 +19,7 @@ app.use(router)
 
 // Configure axios early (before any store actions run)
 // Prefer VITE_API_BASE_URL (new standard), fall back to VITE_API_URL (backward compatibility)
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3004/api'
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3050/api'
 axios.defaults.withCredentials = true
 
 // Global axios interceptors for auth

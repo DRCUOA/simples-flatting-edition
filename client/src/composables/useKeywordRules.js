@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3004/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3050/api';
 const toast = useToast();
 
 export function useKeywordRules() {

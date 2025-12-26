@@ -12,7 +12,7 @@ import axios from 'axios';
 // Configure base instance
 // Prefer VITE_API_BASE_URL (new standard), fall back to VITE_API_URL (backward compatibility)
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3004/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3050/api',
   timeout: 10000,
   withCredentials: true,
   headers: {

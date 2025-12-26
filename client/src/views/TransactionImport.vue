@@ -813,7 +813,7 @@ import axios from 'axios';
 import { normalizeAppDateClient, compareDates } from '../utils/dateUtils';
 
 // Prefer VITE_API_BASE_URL (new standard), fall back to VITE_API_URL (backward compatibility)
-const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3004/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3050/api';
 
 // Initialize stores
 const transactionStore = useTransactionStore();

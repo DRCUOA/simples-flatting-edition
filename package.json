@@ -1,6 +1,6 @@
 {
   "name": "simples",
-  "version": "3.0.13",
+  "version": "0.0.2",
   "description": "Simplified Financial Management System for Household Budgets",
   "private": true,
   "workspaces": [

@@ -1,31 +1,28 @@
-# Simples - Personal Finance Management System
+# Simples - Personal Finance Management System - Flatting Edition
 
-A comprehensive personal finance management system built with Vue.js and Express.js, featuring double-entry accounting, equity tracking, and statement reconciliation. Designed to help users track and manage their financial transactions with professional-grade accuracy—but with a simplicity even your cat could easily grasp.
+
+Based on Simples—the world-leading, fabulous personal finance app—this is the Flatting Edition, designed specifically to help flatmates harmoniously manage their shared household finances. Built with Vue.js and Express.js, it features double-entry accounting, equity tracking, and statement reconciliation. With professional-grade accuracy and a super simple interface, Simples makes it easy for everyone in your flat to stay on top of expenses—no financial expertise (or cat-like reflexes) required.
 
 ## 📦 Version Information
 
-**Project Version:** `3.0.12` (as of December 24, 2025)
+**Project Version:** `0.0.1` (Fresh Start - January 2025)
 
-This is a monorepo workspace containing two independently versioned components:
+This codebase has been rebaselined to version 0.0.1 as a fresh start on an orphaned codebase. This is a monorepo workspace containing two independently versioned components:
 
 | Component | Version | Last Updated | Location |
 |-----------|---------|--------------|----------|
-| **Root Project** | `3.0.12` | 12/24/25 | `package.json` |
-| **Frontend (Client)** | `3.0.8` | 12/10/24 | `client/package.json` |
-| **Backend (Server/API)** | `3.0.7` | 11/25/25 | `server/package.json` |
+| **Root Project** | `0.0.1` | 01/01/25 | `package.json` |
+| **Frontend (Client)** | `0.0.1` | 01/01/25 | `client/package.json` |
+| **Backend (Server/API)** | `0.0.1` | 01/01/25 | `server/package.json` |
 
-**Note:** The root project version (`3.0.12`) represents the overall project state and includes the latest features. Individual component versions may lag behind the root version as they are updated independently.
+**Note:** This project has been reset to version 0.0.1 to begin a new development cycle. All previous version history has been archived, and development will proceed from this baseline.
 
 ### Version History
 
 For detailed version history, change logs, and release notes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Recent Releases:**
-- **v3.0.12** (12/24/25) - PDF export functionality, FlowView fixes, ReportsView improvements
-- **v3.0.11** (12/19/25) - Flow Chart view with Sankey diagrams, bulk category assignment fixes
-- **v3.0.10** (12/18/25) - CSV import fixes, date operation refactoring
-- **v3.0.9** (12/17/25) - Reporting controller syntax fixes
-- **v3.0.8** (12/10/24) - DAO layer refactoring, MVC compliance improvements
+**Current Release:**
+- **v0.0.1** (26/12/25) - Fresh start on orphaned codebase - resetting version history to begin new development cycle
 
 ## 🚀 Quick Start
 
@@ -312,7 +309,7 @@ simples/
 │
 ├── database.sqlite           # Root database file
 ├── .gitignore               # Git ignore rules
-├── package.json             # Root package.json (version 3.0.12)
+├── package.json             # Root package.json (version 0.0.1)
 ├── package-lock.json        # Package lock file
 ├── CHANGELOG.md             # Detailed version history and change log
 └── README.md                # Project documentation
@@ -517,18 +514,18 @@ The application follows a modern web architecture with a clear separation betwee
 - **Styling**: Tailwind CSS with dark mode support
 - **Charts**: Chart.js for data visualization
 - **Build Tool**: Vite
-- **Version**: `3.0.8` (as of 12/10/24)
+- **Version**: `0.0.1` (as of 01/01/25)
 
 ### Backend (`server/`)
 - **Framework**: Express.js with RESTful APIs
 - **Database**: SQLite with DAO pattern
 - **Authentication**: JWT-based with refresh tokens
 - **File Upload**: Multer middleware for CSV imports
-- **Version**: `3.0.7` (as of 11/25/25)
+- **Version**: `0.0.1` (as of 01/01/25)
 
 ### Project Structure
 - **Monorepo**: Workspace-based structure with independent versioning
-- **Root Version**: `3.0.12` (as of 12/24/25) - represents overall project state
+- **Root Version**: `0.0.1` (as of 01/01/25) - fresh start on orphaned codebase
 - **Version Tracking**: See [CHANGELOG.md](CHANGELOG.md) for detailed version history
 
 For detailed architecture documentation, see `documentation/ARCHITECTURE.md`.

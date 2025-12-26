@@ -22,9 +22,15 @@ export const useReconciliationStore = defineStore('reconciliation', () => {
     const totalTransactions = transactions.value.length
     const unreconciledCount = totalTransactions - reconciledCount
     
+    // Optimize: Create Map for O(1) lookups instead of O(n) find() operations
+    // This reduces complexity from O(n*m) to O(n+m)
+    const transactionMap = new Map(
+      transactions.value.map(tx => [tx.transaction_id, tx])
+    )
+    
     // Calculate sum of reconciled transaction amounts
     const reconciledAmount = matches.value.reduce((sum, match) => {
-      const tx = transactions.value.find(t => t.transaction_id === match.transaction_id)
+      const tx = transactionMap.get(match.transaction_id)
       return sum + (tx?.signed_amount || 0)
     }, 0)
     

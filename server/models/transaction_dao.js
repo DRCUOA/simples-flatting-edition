@@ -488,7 +488,21 @@ const transactionDAO = {
           const deletedCount = this.changes;
           
           // Recalculate balances for all affected accounts
-          if (!transactions || transactions.length === 0) {
+          // Optimize: Deduplicate account IDs to avoid recalculating same account multiple times
+          // The SQL query already groups by account_id, but this ensures we only process each account once
+          const uniqueAccounts = new Map();
+          if (transactions && transactions.length > 0) {
+            transactions.forEach((transaction) => {
+              const accountId = transaction.account_id;
+              if (accountId && !uniqueAccounts.has(accountId)) {
+                uniqueAccounts.set(accountId, transaction.latest_date);
+              } else if (!accountId && process.env.NODE_ENV !== 'production') {
+                console.error('Transaction missing account_id:', transaction);
+              }
+            });
+          }
+          
+          if (uniqueAccounts.size === 0) {
             return callback(null, { deletedCount });
           }
           
@@ -497,19 +511,8 @@ const transactionDAO = {
           const { getCurrentTimestamp } = require('../utils/dateUtils');
           const defaultTimestamp = getCurrentTimestamp();
           
-          transactions.forEach((transaction) => {
-            const accountId = transaction.account_id;
-            if (!accountId) {
-              if (process.env.NODE_ENV !== 'production') {
-                console.error('Transaction missing account_id:', transaction);
-              }
-              recalcCount++;
-              if (recalcCount === transactions.length) {
-                callback(null, { deletedCount });
-              }
-              return;
-            }
-            
+          // Process each unique account only once
+          uniqueAccounts.forEach((latestDate, accountId) => {
             accountDAO.updateAccountBalanceFromTransactions(accountId, (balErr, result) => {
               recalcCount++;
               if (balErr) {
@@ -530,7 +533,7 @@ const transactionDAO = {
               }
               
               // When all recalculations are done
-              if (recalcCount === transactions.length) {
+              if (recalcCount === uniqueAccounts.size) {
                 if (recalcErrors.length > 0) {
                   const errorMsg = `Failed to recalculate balances: ${recalcErrors.map(e => e.accountId + ': ' + (e.error?.message || String(e.error))).join(', ')}`;
                   if (process.env.NODE_ENV !== 'production') {

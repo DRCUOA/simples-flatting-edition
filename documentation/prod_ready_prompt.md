@@ -79,4 +79,4 @@ Your output should be:
 - Each commit message clearly scoped
 - A markdown summary of findings per phase
 
-Phase One is complete - continue with Phase 2
+Phase One and Two is complete - continue with Phase 3

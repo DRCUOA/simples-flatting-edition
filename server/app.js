@@ -176,7 +176,17 @@ async function startServer(portToTry, maxRetries = 5) {
   return server;
 }
 
-const server = startServer(BASE_PORT);
+let server = null;
+
+// Start server and capture reference
+(async () => {
+  try {
+    server = await startServer(BASE_PORT);
+  } catch (error) {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
+  }
+})();
 
 // Graceful shutdown handler
 let isShuttingDown = false;
@@ -193,7 +203,25 @@ function gracefulShutdown(signal) {
     console.log(`\n${signal} received, starting graceful shutdown...`);
   }
   
-  // Stop accepting new connections
+  // Stop accepting new connections (only if server was successfully started)
+  if (!server || typeof server.close !== 'function') {
+    // Server wasn't started or isn't valid, just close database and exit
+    closeConnection()
+      .then(() => {
+        if (!isProduction) {
+          console.log('Database connection closed');
+        }
+        process.exit(0);
+      })
+      .catch((error) => {
+        if (!isProduction) {
+          console.error('Error during database close:', error.message);
+        }
+        process.exit(1);
+      });
+    return;
+  }
+  
   server.close(async () => {
     if (!isProduction) {
       console.log('HTTP server closed');

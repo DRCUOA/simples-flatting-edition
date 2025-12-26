@@ -21,9 +21,50 @@ const initializeDatabase = (database) => {
     // haven't been applied yet.
     const ensureStatementOwnershipColumns = () => {
       return new Promise((resolveEnsure, rejectEnsure) => {
-        database.all(`PRAGMA table_info(Transactions);`, (err, rows) => {
-          if (err) return rejectEnsure(err);
-          const cols = new Set((rows || []).map(r => r.name));
+        // First check if the Transactions table exists
+        database.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='Transactions';`, (tableErr, tableRow) => {
+          if (tableErr) return rejectEnsure(tableErr);
+          
+          // If table doesn't exist, check if database needs initialization
+          if (!tableRow) {
+            // Check if database is empty (no tables at all)
+            database.all(`SELECT name FROM sqlite_master WHERE type='table';`, (tablesErr, tables) => {
+              if (tablesErr) {
+                // Error checking tables - still resolve to allow server to start
+                // Database operations will fail with proper error messages
+                return resolveEnsure();
+              }
+              
+              if (!tables || tables.length === 0) {
+                // Database is completely empty - needs schema initialization
+                const error = new Error('Database schema not initialized');
+                console.error('\n' + '='.repeat(80));
+                console.error('❌ DATABASE SCHEMA NOT INITIALIZED');
+                console.error('='.repeat(80));
+                console.error('\nThe database file exists but contains no tables.');
+                console.error('Please initialize the database schema before starting the server:\n');
+                console.error('  Option 1: Run the schema initialization script');
+                console.error('    sqlite3 server/database.sqlite < server/db/current_schema/database_schema_simples.sqlite.sql\n');
+                console.error('  Option 2: Use the migration script');
+                console.error('    cd server && npm run migrate\n');
+                console.error('='.repeat(80) + '\n');
+                return rejectEnsure(error);
+              }
+              
+              // Some tables exist but Transactions doesn't - might be partial schema
+              // Only warn in development, but allow server to start
+              if (process.env.NODE_ENV !== 'production') {
+                console.warn('⚠️  Transactions table does not exist - skipping column addition. Run migrations if needed.');
+              }
+              return resolveEnsure(); // Resolve successfully - allow server to start
+            });
+            return; // Exit early, resolveEnsure/rejectEnsure will be called in callback
+          }
+          
+          // Table exists, check columns
+          database.all(`PRAGMA table_info(Transactions);`, (err, rows) => {
+            if (err) return rejectEnsure(err);
+            const cols = new Set((rows || []).map(r => r.name));
 
           const addColumn = (colName, colType) => new Promise((resCol, rejCol) => {
             database.run(`ALTER TABLE Transactions ADD COLUMN ${colName} ${colType};`, (e) => {
@@ -49,6 +90,7 @@ const initializeDatabase = (database) => {
               );
             })
             .catch(rejectEnsure);
+          });
         });
       });
     };

@@ -15,12 +15,13 @@ export default defineConfig(({ mode }) => {
   
   // Read explicitly set values from .env
   // Support both VITE_API_BASE_URL (new standard) and VITE_API_URL (backward compatibility)
-  const apiBaseUrl = env.VITE_API_BASE_URL || env.VITE_API_URL
+  const apiBaseUrl = env.VITE_API_BASE_URL || env.VITE_API_URL || 'http://localhost:3050/api'
   // Also check process.env as fallback since loadEnv might not load non-prefixed vars
   const frontendPort = parseInt(env.FRONTEND_PORT || process.env.FRONTEND_PORT || '8085', 10)
   
   // Extract backend URL from API base URL for proxy
-  const backendUrl = apiBaseUrl.replace('/api', '')
+  // Default to localhost:3050 if no API URL is configured
+  const backendUrl = apiBaseUrl ? apiBaseUrl.replace('/api', '') : 'http://localhost:3050'
 
   return {
     define: {

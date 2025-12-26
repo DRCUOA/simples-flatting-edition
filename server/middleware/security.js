@@ -130,16 +130,19 @@ const corsOptions = {
       : [
           frontendOrigin,
           'http://localhost:3004',
+          'http://localhost:3050',
+          'http://localhost:4173', // Vite preview server
           'http://localhost:8080',
           'http://localhost:8085',
-          'http://localhost:5173',
+          'http://localhost:5173', // Vite dev server
           'http://localhost:5177',
-          'http://localhost:8085',
           'http://127.0.0.1:3000',
-          'http://127.0.0.1:8080',
-          'http://127.0.0.1:5173',
-          'http://127.0.0.1:8085',
           'http://127.0.0.1:3004',
+          'http://127.0.0.1:3050',
+          'http://127.0.0.1:4173', // Vite preview server
+          'http://127.0.0.1:8080',
+          'http://127.0.0.1:8085',
+          'http://127.0.0.1:5173', // Vite dev server
           'http://127.0.0.1:5177'
         ];
 
